@@ -13,7 +13,7 @@ from database import init_db, get_db, UserHistory, POIRecord
 from services.intent_parser import parse_intent
 from services.weather_service import get_weather
 from services.poi_service import get_candidate_pois
-from services.ugc_service import match_poi_to_user_vibe, extract_semantic_tags, load_ugc_reviews
+from services.ugc_service import match_poi_to_user_vibe
 from services.user_profile import build_profile, get_user_history
 from services.route_planner import plan_routes, generate_description
 
@@ -252,10 +252,9 @@ if _os.path.exists(static_dir):
 
 if __name__ == "__main__":
     import uvicorn
-    import os as _os
 
-    port = int(os.environ.get("PORT", 8000))
-    is_production = os.environ.get("RENDER", False)
+    port = int(_os.environ.get("PORT", 8000))
+    is_production = _os.environ.get("RENDER", False)
 
     ssl_kwargs = {}
     if not is_production:

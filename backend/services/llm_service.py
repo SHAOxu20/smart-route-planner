@@ -31,9 +31,10 @@ class LLMService:
 
     async def _ollama_chat(self, system: str, user: str, temp: float, max_tokens: int) -> str:
         """Ollama 原生 API"""
+        url = self.base_url.replace("/v1", "") + "/api/generate" if "/v1" in self.base_url else f"{self.base_url}/api/generate"
         async with httpx.AsyncClient(timeout=120) as client:
             resp = await client.post(
-                f"http://localhost:11434/api/generate",
+                url,
                 json={
                     "model": self.model,
                     "system": system,

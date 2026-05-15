@@ -3,7 +3,7 @@ import InputPanel from './components/InputPanel'
 import RouteDisplay from './components/RouteDisplay'
 import MapView from './components/MapView'
 import HistoryPanel from './components/HistoryPanel'
-import { MapPin, Compass, Clock, MessageSquare } from 'lucide-react'
+import { MapPin, Compass, Clock } from 'lucide-react'
 
 const API_BASE = '/api'
 
@@ -149,7 +149,7 @@ export default function App() {
               <HistoryPanel
                 sessionId={sessionId}
                 onSelect={(q) => {
-                  planRoute(q)
+                  planRoute(q, userLocation?.city || '')
                   setActiveTab('plan')
                 }}
               />

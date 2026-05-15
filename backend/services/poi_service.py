@@ -8,20 +8,20 @@ import asyncio
 import httpx
 from config import AMAP_API_KEY
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
-# 高德 POI 类型码
-AMAP_TYPES = {
-    "餐饮": "050000",
-    "景点": "110000",
-    "购物": "060000",
-    "休闲": "080000",
-    "咖啡": "050300",
-    "茶馆": "050300",
-    "公园": "110100",
-    "博物馆": "140100",
-    "风景": "110000",
-}
+def _safe_float(*values) -> float:
+    """取第一个非 None 且非空的数值，避免 0 or X 把免费/零分 POI 误判"""
+    for v in values:
+        if v is None:
+            continue
+        try:
+            return float(v)
+        except (ValueError, TypeError):
+            continue
+    return 0.0
+
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
 # 基础搜索维度 — 每个城市都搜这些
 BASE_SEARCHES = [
@@ -90,8 +90,8 @@ async def search_pois_amap(keywords: str, city: str = "", poi_types: str = "", o
                 "address": p.get("address", ""),
                 "lng": float(location[0]) if len(location) > 0 else 0,
                 "lat": float(location[1]) if len(location) > 1 else 0,
-                "avg_price": float(biz.get("cost", 0) or deep.get("avg_price", 0) or 0),
-                "rating": float(biz.get("rating", "4.0") or "4.0"),
+                "avg_price": _safe_float(biz.get("cost"), deep.get("avg_price"), 0),
+                "rating": _safe_float(biz.get("rating"), None, 4.0),
                 "open_time": deep.get("opentime", "") or biz.get("opentime", ""),
                 "tags": _extract_tags(p),
                 "source": "amap",

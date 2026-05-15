@@ -28,15 +28,28 @@ def haversine(lat1, lng1, lat2, lng2):
 
 
 def time_to_minutes(t: str) -> tuple:
-    """解析营业时间字符串为 (open_min, close_min)"""
+    """解析营业时间字符串为 (open_min, close_min)，支持逗号分隔的多段"""
     if not t or "-" not in t:
         return (0, 1440)
-    parts = t.split("-")
     try:
-        oh, om = map(int, parts[0].replace(":", " ").split()[:2]) if ":" in parts[0] else (int(parts[0][:2]), 0)
-        ch, cm = map(int, parts[1].replace(":", " ").split()[:2]) if ":" in parts[1] else (int(parts[1][:2]), 0)
-        return (oh * 60 + om, ch * 60 + cm)
-    except:
+        # 处理逗号分隔的多段时间，只取第一段的开始和最后一段的结束
+        first_segment = t.split(",")[0].strip()
+        last_segment = t.split(",")[-1].strip()
+        # 解析开始时间
+        open_part = first_segment.split("-")[0].strip()
+        # 解析结束时间
+        close_part = last_segment.split("-")[-1].strip()
+
+        def parse_time(s):
+            s = s.replace("：", ":").strip()
+            if ":" in s:
+                h, m = s.split(":")[:2]
+                return int(h) * 60 + int(m)
+            else:
+                return int(s[:2]) * 60
+
+        return (parse_time(open_part), parse_time(close_part))
+    except Exception:
         return (0, 1440)
 
 
@@ -118,7 +131,11 @@ def _greedy_route(scored_pois, start_lat, start_lng, start_time, max_duration, b
             continue
 
         dist = haversine(current_lat, current_lng, poi.get("lat", current_lat), poi.get("lng", current_lng))
-        travel_time = int(dist / 30 * 60) if strategy != "time" else int(dist / 40 * 60)  # 步行 3km/h → m/min
+        # 步行速度约 5km/h，骑行约 15km/h，驾车约 30km/h
+        walk_speed = 5.0
+        bike_speed = 15.0
+        speed = walk_speed if strategy != "time" else bike_speed
+        travel_time = int(dist / speed * 60)
 
         stay_time = _estimate_stay(poi, strategy)
         arrival = current_time + travel_time
@@ -140,7 +157,7 @@ def _greedy_route(scored_pois, start_lat, start_lng, start_time, max_duration, b
             "category": poi.get("category", ""),
             "arrival_time": f"{arrival // 60:02d}:{arrival % 60:02d}",
             "stay_minutes": stay_time,
-            "travel_from_prev": f"步行{travel_time}分钟" if travel_time < 15 else f"骑行{travel_time}分钟",
+            "travel_from_prev": f"步行{travel_time}分钟" if travel_time < 20 else f"骑行{travel_time}分钟" if travel_time < 60 else f"驾车{travel_time}分钟",
             "cost": price,
             "rating": poi.get("rating", 4.0),
             "tags": poi.get("tags", []),

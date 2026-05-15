@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, Clock, Wallet, Star, TrendingUp, ArrowRight, MessageSquare } from 'lucide-react'
+import { MapPin, Clock, Wallet, Star, ArrowRight, MessageSquare } from 'lucide-react'
 
 const PLAN_KEYS = { plan_a: 'A', plan_b: 'B', plan_c: 'C' }
 const PLAN_COLORS = {
