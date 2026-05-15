@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: smart-route-planner
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: RENDER
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:///./route_planner.db

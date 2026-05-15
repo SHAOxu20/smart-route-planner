@@ -1,0 +1,162 @@
+[
+  {
+    "poi_id": "nt_001", "name": "狼山风景名胜区", "category": "景点",
+    "address": "南通市崇川区狼山镇临港路18号", "lng": 120.889, "lat": 31.963,
+    "avg_price": 70, "rating": 4.6, "open_time": "07:00-17:00",
+    "tags": ["自然风光", "佛教文化", "拍照出片", "登高望远", "古迹"],
+    "ugc_summary": "江海第一山，登顶俯瞰长江视野绝佳，广教寺香火旺盛，适合半日游",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_002", "name": "濠河风景区", "category": "景点",
+    "address": "南通市崇川区濠北路508号", "lng": 120.869, "lat": 32.018,
+    "avg_price": 60, "rating": 4.7, "open_time": "全天",
+    "tags": ["夜景美", "拍照出片", "氛围感强", "历史文化", "游船"],
+    "ugc_summary": "千年护城河，5A景区，夜游画舫灯光秀超美，沿河步道适合散步",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_003", "name": "南通博物苑", "category": "景点",
+    "address": "南通市崇川区濠南路19号", "lng": 120.870, "lat": 32.016,
+    "avg_price": 0, "rating": 4.5, "open_time": "09:00-17:00",
+    "tags": ["免费", "文艺清新", "历史文化", "拍照出片", "紫藤花"],
+    "ugc_summary": "中国第一座公共博物馆，张謇创办，濠南别业中西合璧，紫藤花开美如画",
+    "source": "xiaohongshu", "weather_sensitive": "both"
+  },
+  {
+    "poi_id": "nt_004", "name": "大生365文创园", "category": "景点",
+    "address": "南通市崇川区通启路8号", "lng": 120.860, "lat": 32.018,
+    "avg_price": 0, "rating": 4.4, "open_time": "10:00-22:00",
+    "tags": ["拍照出片", "工业风", "网红打卡", "免费", "文艺清新"],
+    "ugc_summary": "老厂房改造文创园，南通大字墙必拍，工业风涂鸦，CCD出胶片感",
+    "source": "xiaohongshu", "weather_sensitive": "both"
+  },
+  {
+    "poi_id": "nt_005", "name": "滨江公园", "category": "景点",
+    "address": "南通市崇川区桃园路8号", "lng": 120.876, "lat": 31.953,
+    "avg_price": 0, "rating": 4.4, "open_time": "全天",
+    "tags": ["自然风光", "免费", "日落", "骑行", "亲子友好"],
+    "ugc_summary": "沿江栈道徒步或骑行，长江日落绝美，适合傍晚散步拍照",
+    "source": "xiaohongshu", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_006", "name": "唐闸古镇", "category": "景点",
+    "address": "南通市崇川区唐闸镇街道", "lng": 120.850, "lat": 32.065,
+    "avg_price": 0, "rating": 4.3, "open_time": "全天",
+    "tags": ["复古格调", "历史文化", "拍照出片", "免费", "灯笼夜景"],
+    "ugc_summary": "张謇实业救国发源地，工业遗存+灯笼夜景，适合傍晚到晚上逛",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_007", "name": "寺街", "category": "景点",
+    "address": "南通市崇川区寺街", "lng": 120.867, "lat": 32.020,
+    "avg_price": 0, "rating": 4.3, "open_time": "全天",
+    "tags": ["烟火气", "复古格调", "免费", "美食街", "拍照出片"],
+    "ugc_summary": "老南通生活气息最浓的街巷，红墙拍照好看，臭豆腐和炸串一绝",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_008", "name": "啬园", "category": "景点",
+    "address": "南通市崇川区啬园路1号", "lng": 120.897, "lat": 31.977,
+    "avg_price": 20, "rating": 4.4, "open_time": "08:00-17:30",
+    "tags": ["安静", "园林", "历史文化", "自然风光", "适合独处"],
+    "ugc_summary": "张謇长眠之地，园林清幽雅致，适合安静散步，人不多很惬意",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_009", "name": "蓝印花布博物馆", "category": "景点",
+    "address": "南通市崇川区濠东路81号", "lng": 120.871, "lat": 32.018,
+    "avg_price": 30, "rating": 4.5, "open_time": "09:00-16:30",
+    "tags": ["非遗体验", "文艺清新", "亲子友好", "拍照出片", "手工"],
+    "ugc_summary": "可以亲手做扎染方巾的非遗体验馆，蓝白配色拍照很好看，适合文艺青年",
+    "source": "xiaohongshu", "weather_sensitive": "indoor"
+  },
+  {
+    "poi_id": "nt_010", "name": "文峰塔", "category": "景点",
+    "address": "南通市崇川区文峰路2号", "lng": 120.883, "lat": 32.009,
+    "avg_price": 0, "rating": 4.3, "open_time": "08:00-17:00",
+    "tags": ["古迹", "拍照出片", "免费", "历史文化", "地标"],
+    "ugc_summary": "明代古塔，五层六角砖塔，旁边有塔影咖啡可以坐下来慢慢欣赏",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_011", "name": "紫琅湖", "category": "景点",
+    "address": "南通市崇川区崇川路", "lng": 120.935, "lat": 31.985,
+    "avg_price": 0, "rating": 4.5, "open_time": "全天",
+    "tags": ["自然风光", "免费", "灯光秀", "亲子友好", "骑行"],
+    "ugc_summary": "新兴城市湖景，每周五六晚有180米喷泉灯光秀，适合晚上来看",
+    "source": "xiaohongshu", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_012", "name": "南和通大排档", "category": "餐饮",
+    "address": "南通市崇川区南大街99号", "lng": 120.867, "lat": 32.015,
+    "avg_price": 80, "rating": 4.5, "open_time": "11:00-14:00,16:30-21:00",
+    "tags": ["地道", "性价比", "排队", "本地菜", "烟火气"],
+    "ugc_summary": "本地人认证的南通菜，山泉水煮文蛤和麻虾酱馒头必点，16:30开始放号建议早点去",
+    "source": "dianping", "weather_sensitive": "indoor"
+  },
+  {
+    "poi_id": "nt_013", "name": "兰姐海鲜", "category": "餐饮",
+    "address": "南通市崇川区濠南路88号", "lng": 120.870, "lat": 32.016,
+    "avg_price": 100, "rating": 4.4, "open_time": "11:00-21:00",
+    "tags": ["地道", "烟火气", "濠河景观", "海鲜", "性价比"],
+    "ugc_summary": "濠河边上的海鲜店，食材鲜活，高压锅焖猪手和油盐焗黄鱼是招牌",
+    "source": "dianping", "weather_sensitive": "indoor"
+  },
+  {
+    "poi_id": "nt_014", "name": "四宜糕团店", "category": "餐饮",
+    "address": "南通市崇川区南大街99号", "lng": 120.867, "lat": 32.016,
+    "avg_price": 30, "rating": 4.5, "open_time": "06:30-20:00",
+    "tags": ["老字号", "性价比", "地道", "甜品", "百年老店"],
+    "ugc_summary": "百年老字号，桂花糕和蟹黄汤包必吃，人均30就能尝遍南通味道",
+    "source": "dianping", "weather_sensitive": "indoor"
+  },
+  {
+    "poi_id": "nt_015", "name": "塔影咖啡", "category": "休闲",
+    "address": "南通市崇川区文峰路2号", "lng": 120.883, "lat": 32.010,
+    "avg_price": 35, "rating": 4.4, "open_time": "09:00-20:00",
+    "tags": ["拍照出片", "文艺清新", "景观位", "安静适合聊天", "古风"],
+    "ugc_summary": "露台正对文峰塔，视野绝佳，咖啡+古塔同框超好拍，适合发呆一下午",
+    "source": "xiaohongshu", "weather_sensitive": "both"
+  },
+  {
+    "poi_id": "nt_016", "name": "西海咖啡", "category": "休闲",
+    "address": "南通市崇川区启秀路15号", "lng": 120.867, "lat": 32.018,
+    "avg_price": 38, "rating": 4.3, "open_time": "09:00-21:00",
+    "tags": ["拍照出片", "文艺清新", "网红打卡", "安静适合聊天"],
+    "ugc_summary": "启秀路上的网红咖啡，环境很好拍，手冲品质不错，适合和朋友聊天",
+    "source": "xiaohongshu", "weather_sensitive": "indoor"
+  },
+  {
+    "poi_id": "nt_017", "name": "一半清闲", "category": "休闲",
+    "address": "南通市崇川区濠北路30号", "lng": 120.868, "lat": 32.020,
+    "avg_price": 40, "rating": 4.4, "open_time": "10:00-21:00",
+    "tags": ["安静适合聊天", "文艺清新", "适合独处", "氛围感强", "濠河景观"],
+    "ugc_summary": "濠河边上的安静茶馆+咖啡，窗外就是河景，适合放空发呆，茶点精致",
+    "source": "xiaohongshu", "weather_sensitive": "indoor"
+  },
+  {
+    "poi_id": "nt_018", "name": "寺街臭豆腐", "category": "餐饮",
+    "address": "南通市崇川区寺街内", "lng": 120.868, "lat": 32.020,
+    "avg_price": 10, "rating": 4.5, "open_time": "10:00-20:00",
+    "tags": ["地道", "性价比", "小吃", "排队", "烟火气"],
+    "ugc_summary": "寺街必吃，10元一份外脆里嫩，酱汁是灵魂，排队也要吃",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_019", "name": "荷兰街夜市", "category": "休闲",
+    "address": "南通市崇川区青年东路", "lng": 120.922, "lat": 32.002,
+    "avg_price": 50, "rating": 4.2, "open_time": "17:00-23:00",
+    "tags": ["烟火气", "美食", "夜市", "热闹", "性价比"],
+    "ugc_summary": "南通最热闹的夜市，梅花糕+芝士烤榴莲必吃，晚上氛围很好",
+    "source": "dianping", "weather_sensitive": "outdoor"
+  },
+  {
+    "poi_id": "nt_020", "name": "剑山状元咖啡", "category": "休闲",
+    "address": "南通市崇川区狼山镇剑山路", "lng": 120.888, "lat": 31.965,
+    "avg_price": 35, "rating": 4.3, "open_time": "08:00-18:00",
+    "tags": ["禅意", "拍照出片", "祈福", "景观位", "安静"],
+    "ugc_summary": "狼山脚下的禅意咖啡，状元阁祈福+咖啡，登完山歇脚刚好",
+    "source": "xiaohongshu", "weather_sensitive": "both"
+  }
+]

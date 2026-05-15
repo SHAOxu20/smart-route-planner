@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl shadow-lg;
+  }
+  .btn-primary {
+    @apply px-6 py-3 bg-primary-500 text-white rounded-xl font-medium
+           hover:bg-primary-600 active:scale-[0.98] transition-all
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-outline {
+    @apply px-4 py-2 border border-gray-200 rounded-xl text-gray-700
+           hover:border-primary-500 hover:text-primary-600 transition-all;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl
+           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-50
+           transition-all text-gray-800 placeholder-gray-400;
+  }
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+/* 语音按钮脉冲动画 */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.pulse-recording {
+  animation: pulse-ring 1.5s ease-out infinite;
+}

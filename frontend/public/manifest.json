@@ -1,0 +1,22 @@
+{
+  "name": "LocalSmartRoute 智能路线规划",
+  "short_name": "智能路线",
+  "description": "本地智能路线规划系统 — 输入出行需求，AI自动生成个性化路线",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

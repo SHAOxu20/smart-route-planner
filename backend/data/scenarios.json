@@ -1,0 +1,32 @@
+{
+  "约会": {
+    "weight_ugc": 0.5, "weight_cluster": 0.3, "weight_weather": 0.2,
+    "preferred_categories": ["景点", "餐饮", "休闲"],
+    "vibe": "浪漫",
+    "description": "优先匹配高氛围、高体验的POI组合"
+  },
+  "商务应酬": {
+    "weight_ugc": 0.25, "weight_cluster": 0.55, "weight_weather": 0.2,
+    "preferred_categories": ["餐饮"],
+    "vibe": "商务",
+    "description": "优先匹配同档次商务属性POI集群"
+  },
+  "亲子": {
+    "weight_ugc": 0.35, "weight_cluster": 0.35, "weight_weather": 0.3,
+    "preferred_categories": ["景点", "餐饮"],
+    "vibe": "亲子",
+    "description": "兼顾室内外，优先安全互动体验"
+  },
+  "游玩": {
+    "weight_ugc": 0.33, "weight_cluster": 0.34, "weight_weather": 0.33,
+    "preferred_categories": ["景点", "餐饮", "休闲"],
+    "vibe": "休闲",
+    "description": "三者均衡，兼顾效率与体验"
+  },
+  "餐饮": {
+    "weight_ugc": 0.45, "weight_cluster": 0.3, "weight_weather": 0.25,
+    "preferred_categories": ["餐饮", "休闲"],
+    "vibe": "美食",
+    "description": "美食探索为主，重视评价口碑"
+  }
+}
