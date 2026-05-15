@@ -73,10 +73,14 @@ async def plan_route(req: RouteRequest, db: Session = Depends(get_db)):
     history = get_user_history(sid, db)
 
     # 2. 意图解析（规则引擎毫秒级，LLM 可选）
-    from services.intent_parser import _fallback_parse
-    intent = _fallback_parse(req.query)
+    from services.intent_parser import _extract_intent
+    intent = _extract_intent(req.query)
     # LLM 解析作为异步后台补充（可选开启）
     # intent = await parse_intent(req.query, history)
+
+    # 注入前端 GPS 反解的城市到意图
+    if req.city and not intent.get("destination"):
+        intent["destination"] = req.city
 
     # 3. 天气数据
     weather = await get_weather(req.city)
@@ -134,18 +138,29 @@ async def adjust_route(req: AdjustRequest, db: Session = Depends(get_db)):
     if isinstance(intent, str):
         intent = json.loads(intent)
 
-    # 解析反馈
+    # 解析反馈 — 灵活的规则匹配
     feedback = req.feedback
-    if "贵" in feedback or "便宜" in feedback:
+    fb_lower = feedback.lower()
+    if any(w in fb_lower for w in ["贵", "便宜", "省钱", "实惠"]):
         intent["budget"] = int(intent.get("budget", 500) * 0.6)
-    elif "甜品" in feedback or "咖啡" in feedback or "加" in feedback:
-        intent["explicit_preferences"] = intent.get("explicit_preferences", []) + ["甜品"]
-    elif "时间" in feedback or "来不及" in feedback:
-        intent["duration_hours"] = max(1, intent.get("duration_hours", 4) * 0.6)
+    elif any(w in fb_lower for w in ["甜品", "咖啡", "奶茶", "小吃", "加"]):
+        cur = intent.get("explicit_preferences", [])
+        intent["explicit_preferences"] = cur + ["甜品", "咖啡"]
+    elif any(w in fb_lower for w in ["时间", "来不及", "快", "赶时间", "缩短"]):
+        intent["duration_hours"] = max(0.5, intent.get("duration_hours", 4) * 0.6)
+    elif any(w in fb_lower for w in ["室内", "下雨", "热", "冷", "晒"]):
+        intent["implicit_preferences"] = intent.get("implicit_preferences", []) + ["室内优先"]
+        intent["weather_concern"] = True
+    elif any(w in fb_lower for w in ["人少", "不排队", "安静", "小众"]):
+        intent["explicit_preferences"] = intent.get("explicit_preferences", []) + ["小众"]
+    else:
+        # 通用: 把反馈文本加到偏好中
+        intent["explicit_preferences"] = intent.get("explicit_preferences", []) + [feedback]
 
-    weather = await get_weather()
-    from services.user_profile import _default_profile
-    profile = _default_profile(intent)
+    city = intent.get("destination", "")
+    weather = await get_weather(city)
+    from services.user_profile import build_profile
+    profile = await build_profile(intent, None)
     pois = await get_candidate_pois(intent, weather.get("constraints", {}))
     plans = plan_routes(pois, intent, profile, weather, None, None)
 

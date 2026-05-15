@@ -1,11 +1,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Send, Mic, MicOff, MapPin, Navigation, Loader2 } from 'lucide-react'
 
-const QUICK_PROMPTS = [
-  { label: '💑 约会', text: '周末和女朋友约会，想去有氛围感的地方，拍照好看，不要太贵' },
-  { label: '👨‍👩‍👧 亲子', text: '带5岁小朋友出去玩一天，最好能学点东西，室内为主' },
-  { label: '🍜 美食', text: '想吃地道本地菜，环境要好，适合请朋友吃饭' },
-  { label: '☕ 休闲', text: '想找个安静的地方喝咖啡看书，然后逛逛有意思的小店' },
+const EXAMPLE_PROMPTS = [
+  '周末和朋友出去玩，想去有意思的地方',
+  '附近有什么好吃的推荐？人均100左右',
+  '想找个安静的地方待一下午',
+  '第一次来这个城市，有什么必去的？',
+  '晚上去哪逛比较好？不要太远',
+  '推荐几个拍照好看的地方',
+  '有没有本地人常去的宝藏小店',
+  '带爸妈玩一天，不要太累的路线',
 ]
 
 export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation, setUserLocation }) {
@@ -46,14 +50,16 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
     return ''
   }, [])
 
-  const onLocationSuccess = useCallback(async (lat, lng, cityName) => {
+  const onLocationSuccess = useCallback(async (lat, lng, cityName, source) => {
+    // 只有 GPS 源才能覆盖已有位置
+    if (userLocation && source === 'ip') return  // IP 不覆盖 GPS
+
     const resolvedCity = cityName || await resolveCity(lat, lng)
-    setUserLocation({ lat, lng, city: resolvedCity, ts: Date.now() })
-    // 缓存 5 分钟
+    setUserLocation({ lat, lng, city: resolvedCity, ts: Date.now(), source })
     try { localStorage.setItem('last_location', JSON.stringify({ lat, lng, city: resolvedCity, ts: Date.now() })) } catch {}
     setLocating(false)
     setLocError('')
-  }, [setUserLocation, resolveCity])
+  }, [setUserLocation, resolveCity, userLocation])
 
   const detectLocation = useCallback(() => {
     if (locatingRef.current) return
@@ -73,52 +79,52 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
       }
     } catch {}
 
-    // 方案0: IP 定位 — 无需权限，毫秒级（桌面首选）
+    // IP 定位仅作城市名兜底 — 不设 userLocation，只设 city 文本
     fetch('https://ipapi.co/json/')
       .then(r => r.json())
       .then(data => {
-        if (data.latitude && data.longitude) {
-          const cityName = (data.city || '').replace(/市$/, '')
-          onLocationSuccess(data.latitude, data.longitude, cityName)
+        if (data.city && !userLocation) {
+          const c = (data.city || '').replace(/市$/, '')
+          setCity(c)
         }
       })
       .catch(() => {})
 
-    // 方案1: 浏览器定位 — 手机 < 1 秒 (并行)
+    // 方案1: 浏览器 GPS — 手机秒级，桌面可能慢
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => onLocationSuccess(pos.coords.latitude, pos.coords.longitude, userLocation?.city || ''),
+        (pos) => onLocationSuccess(pos.coords.latitude, pos.coords.longitude, '', 'browser'),
         () => {},
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 120000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       )
     }
 
-    // 方案2: 高德定位 — 国产手机 GNSS/BDS 精度更高 (并行)
+    // 方案2: 高德定位 — 国产手机 GNSS/BDS，精度最高
     if (window.AMap && window.AMap.Geolocation) {
       new window.AMap.Geolocation({
         enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 120000,
+        timeout: 10000,
+        maximumAge: 60000,
         convert: true,
         showButton: false,
         showMarker: false,
         showCircle: false,
       }).getCurrentPosition((status, result) => {
         if (status === 'complete' && result.position) {
-          onLocationSuccess(result.position.lat, result.position.lng, userLocation?.city || '')
+          onLocationSuccess(result.position.lat, result.position.lng, '', 'amap')
         }
       })
     }
 
     // 兜底超时
     setTimeout(() => {
+      locatingRef.current = false
       if (!userLocation) {
         setLocating(false)
-        setLocError('定位失败，请检查权限后重试')
+        if (!city) setLocError('定位失败，请检查权限后重试')
       }
-      locatingRef.current = false
-    }, 6000)
-  }, [setUserLocation, onLocationSuccess, userLocation])
+    }, 10000)
+  }, [setUserLocation, onLocationSuccess, userLocation, city])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -251,24 +257,22 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
           </div>
         )}
 
-        {/* 快捷提示 */}
-        <div className="flex flex-wrap gap-1.5">
-          {QUICK_PROMPTS.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => {
-                if (!city) return
-                setQuery(p.text)
-                onPlan(p.text, city)
-              }}
-              disabled={loading || !city}
-              className="px-3 py-2 bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200
-                         rounded-xl text-xs text-gray-600 hover:text-blue-600 transition-all disabled:opacity-50"
-            >
-              {p.label}
-            </button>
-          ))}
+        {/* 示例输入 */}
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1.5 pb-1" style={{ minWidth: 'max-content' }}>
+            {EXAMPLE_PROMPTS.map((text, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setQuery(text)}
+                disabled={loading}
+                className="shrink-0 px-3 py-1.5 bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200
+                           rounded-full text-xs text-gray-500 hover:text-blue-600 transition-all disabled:opacity-50 whitespace-nowrap"
+              >
+                {text}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 提交 */}
