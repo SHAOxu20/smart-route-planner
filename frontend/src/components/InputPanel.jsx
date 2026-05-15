@@ -69,70 +69,55 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
         setCity(cached.city)
         setLocating(false)
         locatingRef.current = false
-        // 后台静默刷新
-        refreshLocation()
         return
       }
     } catch {}
 
-    refreshLocation()
-
-    function refreshLocation() {
-      const promises = []
-
-      // 方案1: 浏览器定位（手机 < 1 秒）
-      if (navigator.geolocation) {
-        promises.push(new Promise((resolve) => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, source: 'browser' }),
-            () => resolve(null),
-            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
-          )
-        }))
-      }
-
-      // 方案2: 高德定位（国产手机 GNSS/BDS 精度更高）
-      if (window.AMap && window.AMap.Geolocation) {
-        promises.push(new Promise((resolve) => {
-          new window.AMap.Geolocation({
-            enableHighAccuracy: true,
-            timeout: 8000,
-            maximumAge: 60000,
-            convert: true,
-            showButton: false,
-            showMarker: false,
-            showCircle: false,
-          }).getCurrentPosition((status, result) => {
-            if (status === 'complete' && result.position) {
-              resolve({ lat: result.position.lat, lng: result.position.lng, source: 'amap' })
-            } else {
-              resolve(null)
-            }
-          })
-        }))
-      }
-
-      // 竞速：谁先返回用谁
-      Promise.race([
-        ...promises,
-        new Promise(r => setTimeout(() => r('timeout'), 8000))
-      ]).then((result) => {
-        if (result && result !== 'timeout' && result.lat) {
-          onLocationSuccess(result.lat, result.lng, userLocation?.city || '')
-        } else if (!userLocation) {
-          // 如果 AMap 还没加载完，等它
-          if (window.AMap && !window.AMap.Geolocation && !userLocation) {
-            window.AMap.plugin('AMap.Geolocation', () => {
-              detectLocation()
-            })
-            return
-          }
-          setLocating(false)
-          setLocError('定位失败，请检查权限后重试')
+    // 方案0: IP 定位 — 无需权限，毫秒级（桌面首选）
+    fetch('https://ipapi.co/json/')
+      .then(r => r.json())
+      .then(data => {
+        if (data.latitude && data.longitude) {
+          const cityName = (data.city || '').replace(/市$/, '')
+          onLocationSuccess(data.latitude, data.longitude, cityName)
         }
-        locatingRef.current = !!userLocation
+      })
+      .catch(() => {})
+
+    // 方案1: 浏览器定位 — 手机 < 1 秒 (并行)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => onLocationSuccess(pos.coords.latitude, pos.coords.longitude, userLocation?.city || ''),
+        () => {},
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 120000 }
+      )
+    }
+
+    // 方案2: 高德定位 — 国产手机 GNSS/BDS 精度更高 (并行)
+    if (window.AMap && window.AMap.Geolocation) {
+      new window.AMap.Geolocation({
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 120000,
+        convert: true,
+        showButton: false,
+        showMarker: false,
+        showCircle: false,
+      }).getCurrentPosition((status, result) => {
+        if (status === 'complete' && result.position) {
+          onLocationSuccess(result.position.lat, result.position.lng, userLocation?.city || '')
+        }
       })
     }
+
+    // 兜底超时
+    setTimeout(() => {
+      if (!userLocation) {
+        setLocating(false)
+        setLocError('定位失败，请检查权限后重试')
+      }
+      locatingRef.current = false
+    }, 6000)
   }, [setUserLocation, onLocationSuccess, userLocation])
 
   const handleSubmit = (e) => {
