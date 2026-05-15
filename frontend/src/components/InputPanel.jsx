@@ -11,22 +11,25 @@ const QUICK_PROMPTS = [
 export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation, setUserLocation }) {
   const [query, setQuery] = useState('')
   const [isRecording, setIsRecording] = useState(false)
-  const [city, setCity] = useState('')
-  const [locating, setLocating] = useState(false)
+  const [city, setCity] = useState(userLocation?.city || '')
+  const [locating, setLocating] = useState(!userLocation)
   const [locError, setLocError] = useState('')
   const recognitionRef = useRef(null)
+  const locatingRef = useRef(false)
+
+  // 同步外部 city 更新
+  useEffect(() => {
+    if (userLocation?.city) setCity(userLocation.city)
+  }, [userLocation?.city])
 
   // 首次加载自动定位
   useEffect(() => {
-    detectLocation()
+    if (!userLocation && !locatingRef.current) {
+      detectLocation()
+    }
   }, [])
 
-  const onLocationSuccess = useCallback(async (lat, lng) => {
-    setUserLocation({ lat, lng })
-    setLocating(false)
-    setLocError('')
-
-    // 逆地理编码 → 获取城市名
+  const resolveCity = useCallback(async (lat, lng) => {
     try {
       const resp = await fetch(
         `https://restapi.amap.com/v3/geocode/regeo?key=316109962e9cad4e001c053ba0841ba0&location=${lng},${lat}`
@@ -36,77 +39,101 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
         const addr = data.regeocode.addressComponent
         const detectedCity = addr.city || addr.province || ''
         if (detectedCity) {
-          const cityName = detectedCity.replace(/市$/, '')
-          setCity(cityName)
-          setUserLocation(prev => ({ ...prev, lat, lng, city: cityName }))
+          return detectedCity.replace(/市$/, '')
         }
       }
-    } catch {
-      // 逆地理失败不阻塞
-    }
-  }, [setUserLocation])
+    } catch {}
+    return ''
+  }, [])
+
+  const onLocationSuccess = useCallback(async (lat, lng, cityName) => {
+    const resolvedCity = cityName || await resolveCity(lat, lng)
+    setUserLocation({ lat, lng, city: resolvedCity, ts: Date.now() })
+    // 缓存 5 分钟
+    try { localStorage.setItem('last_location', JSON.stringify({ lat, lng, city: resolvedCity, ts: Date.now() })) } catch {}
+    setLocating(false)
+    setLocError('')
+  }, [setUserLocation, resolveCity])
 
   const detectLocation = useCallback(() => {
+    if (locatingRef.current) return
+    locatingRef.current = true
     setLocating(true)
     setLocError('')
 
-    // 方案一：高德定位插件 (北斗/GNSS + 基站 + WiFi，国行手机最优)
-    if (window.AMap && window.AMap.Geolocation) {
-      const geo = new window.AMap.Geolocation({
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000,
-        convert: true,  // 自动转为高德坐标系 (GCJ-02)
-        showButton: false,
-        showMarker: false,
-        showCircle: false,
-      })
-
-      geo.getCurrentPosition((status, result) => {
-        if (status === 'complete' && result.position) {
-          onLocationSuccess(result.position.lat, result.position.lng)
-        } else {
-          // 高德定位失败，回退到浏览器定位
-          _fallbackToBrowser()
-        }
-      })
-
-      return
-    }
-
-    // 高德插件未加载，等一下再试
-    if (window.AMap && !window.AMap.Geolocation) {
-      window.AMap.plugin('AMap.Geolocation', () => {
-        detectLocation()
-      })
-      return
-    }
-
-    // 高德未加载，走浏览器定位
-    _fallbackToBrowser()
-
-    function _fallbackToBrowser() {
-      if (!navigator.geolocation) {
+    // 先用缓存（5分钟内）
+    try {
+      const cached = JSON.parse(localStorage.getItem('last_location') || 'null')
+      if (cached && cached.lat && Date.now() - cached.ts < 300000) {
+        setUserLocation({ lat: cached.lat, lng: cached.lng, city: cached.city, ts: cached.ts })
+        setCity(cached.city)
         setLocating(false)
-        setLocError('定位不可用，请手动选择城市')
+        locatingRef.current = false
+        // 后台静默刷新
+        refreshLocation()
         return
       }
+    } catch {}
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => onLocationSuccess(pos.coords.latitude, pos.coords.longitude),
-        (err) => {
-          setLocating(false)
-          switch (err.code) {
-            case 1: setLocError('定位权限被拒绝'); break
-            case 2: setLocError('无法获取位置，请检查定位服务'); break
-            case 3: setLocError('定位超时，请重试'); break
-            default: setLocError('定位失败，请重试');
+    refreshLocation()
+
+    function refreshLocation() {
+      const promises = []
+
+      // 方案1: 浏览器定位（手机 < 1 秒）
+      if (navigator.geolocation) {
+        promises.push(new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, source: 'browser' }),
+            () => resolve(null),
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+          )
+        }))
+      }
+
+      // 方案2: 高德定位（国产手机 GNSS/BDS 精度更高）
+      if (window.AMap && window.AMap.Geolocation) {
+        promises.push(new Promise((resolve) => {
+          new window.AMap.Geolocation({
+            enableHighAccuracy: true,
+            timeout: 8000,
+            maximumAge: 60000,
+            convert: true,
+            showButton: false,
+            showMarker: false,
+            showCircle: false,
+          }).getCurrentPosition((status, result) => {
+            if (status === 'complete' && result.position) {
+              resolve({ lat: result.position.lat, lng: result.position.lng, source: 'amap' })
+            } else {
+              resolve(null)
+            }
+          })
+        }))
+      }
+
+      // 竞速：谁先返回用谁
+      Promise.race([
+        ...promises,
+        new Promise(r => setTimeout(() => r('timeout'), 8000))
+      ]).then((result) => {
+        if (result && result !== 'timeout' && result.lat) {
+          onLocationSuccess(result.lat, result.lng, userLocation?.city || '')
+        } else if (!userLocation) {
+          // 如果 AMap 还没加载完，等它
+          if (window.AMap && !window.AMap.Geolocation && !userLocation) {
+            window.AMap.plugin('AMap.Geolocation', () => {
+              detectLocation()
+            })
+            return
           }
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
-      )
+          setLocating(false)
+          setLocError('定位失败，请检查权限后重试')
+        }
+        locatingRef.current = !!userLocation
+      })
     }
-  }, [setUserLocation, onLocationSuccess])
+  }, [setUserLocation, onLocationSuccess, userLocation])
 
   const handleSubmit = (e) => {
     e.preventDefault()
