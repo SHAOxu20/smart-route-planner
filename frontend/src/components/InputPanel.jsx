@@ -50,16 +50,43 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
     return ''
   }, [])
 
-  const onLocationSuccess = useCallback(async (lat, lng, cityName, source) => {
-    // 只有 GPS 源才能覆盖已有位置
-    if (userLocation && source === 'ip') return  // IP 不覆盖 GPS
+  // 记录已成功的定位源，防止低优先级覆盖高优先级
+  const locationRef = useRef(null)
+  // 缓存 resolveCity 的 promise，避免重复请求
+  const cityPromiseRef = useRef(null)
 
-    const resolvedCity = cityName || await resolveCity(lat, lng)
-    setUserLocation({ lat, lng, city: resolvedCity, ts: Date.now(), source })
-    try { localStorage.setItem('last_location', JSON.stringify({ lat, lng, city: resolvedCity, ts: Date.now() })) } catch {}
+  const applyLocation = useCallback((lat, lng, cityName, source) => {
+    // 优先级: amap(2) > browser(1) > ip(0)
+    const priority = { amap: 2, browser: 1, ip: 0 }[source] || 0
+    const prev = locationRef.current
+    if (prev && prev.priority >= priority && prev.lat) return
+
+    locationRef.current = { lat, lng, priority }
+    const loc = { lat, lng, city: cityName || '', ts: Date.now(), source }
+    setUserLocation(loc)
+
+    // 异步补城市名，不阻塞定位
+    if (!cityName) {
+      const key = `${lat.toFixed(4)},${lng.toFixed(4)}`
+      if (!cityPromiseRef.current || cityPromiseRef.current.key !== key) {
+        cityPromiseRef.current = { key, promise: resolveCity(lat, lng) }
+      }
+      cityPromiseRef.current.promise.then(c => {
+        if (c) {
+          setCity(c)
+          setUserLocation(prev => prev ? { ...prev, city: c } : prev)
+        }
+      }).catch(() => {})
+    } else {
+      setCity(cityName)
+    }
+
+    try {
+      localStorage.setItem('last_location', JSON.stringify({ lat, lng, city: cityName, ts: Date.now() }))
+    } catch {}
     setLocating(false)
     setLocError('')
-  }, [setUserLocation, resolveCity, userLocation])
+  }, [setUserLocation, resolveCity])
 
   const detectLocation = useCallback(() => {
     if (locatingRef.current) return
@@ -71,47 +98,43 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
     try {
       const cached = JSON.parse(localStorage.getItem('last_location') || 'null')
       if (cached && cached.lat && Date.now() - cached.ts < 300000) {
-        setUserLocation({ lat: cached.lat, lng: cached.lng, city: cached.city, ts: cached.ts })
-        setCity(cached.city)
-        setLocating(false)
+        applyLocation(cached.lat, cached.lng, cached.city || '', 'browser')
         locatingRef.current = false
         return
       }
     } catch {}
 
-    // IP 定位仅作城市名兜底 — 不设 userLocation，只设 city 文本
+    // IP 仅作城市名兜底（不触发「已定位」）
     fetch('https://ipapi.co/json/')
       .then(r => r.json())
       .then(data => {
-        if (data.city && !userLocation) {
+        if (data.city && !locationRef.current?.lat) {
           const c = (data.city || '').replace(/市$/, '')
-          setCity(c)
+          setCity(prev => prev || c)
         }
       })
       .catch(() => {})
 
-    // 方案1: 浏览器 GPS — 手机秒级，桌面可能慢
+    // 浏览器 GPS
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => onLocationSuccess(pos.coords.latitude, pos.coords.longitude, '', 'browser'),
+        (pos) => applyLocation(pos.coords.latitude, pos.coords.longitude, '', 'browser'),
         () => {},
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
       )
     }
 
-    // 方案2: 高德定位 — 国产手机 GNSS/BDS，精度最高
+    // 高德 GNSS/BDS
     if (window.AMap && window.AMap.Geolocation) {
       new window.AMap.Geolocation({
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
+        enableHighAccuracy: true, timeout: 15000, maximumAge: 30000,
         convert: true,
-        showButton: false,
-        showMarker: false,
-        showCircle: false,
+        showButton: false, showMarker: false, showCircle: false,
       }).getCurrentPosition((status, result) => {
         if (status === 'complete' && result.position) {
-          onLocationSuccess(result.position.lat, result.position.lng, '', 'amap')
+          // AMap geolocation 自带城市信息
+          const city = result.addressComponent?.city || ''
+          applyLocation(result.position.lat, result.position.lng, city.replace(/市$/, ''), 'amap')
         }
       })
     }
@@ -119,12 +142,12 @@ export default function InputPanel({ onPlan, loading, onVoiceInput, userLocation
     // 兜底超时
     setTimeout(() => {
       locatingRef.current = false
-      if (!userLocation) {
+      if (!locationRef.current?.lat) {
         setLocating(false)
-        if (!city) setLocError('定位失败，请检查权限后重试')
+        if (!city) setLocError('定位较慢，请确认已开启定位权限并重试')
       }
-    }, 10000)
-  }, [setUserLocation, onLocationSuccess, userLocation, city])
+    }, 15000)
+  }, [applyLocation, city])
 
   const handleSubmit = (e) => {
     e.preventDefault()
